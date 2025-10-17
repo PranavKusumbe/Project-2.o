@@ -97,6 +97,8 @@ export const performanceAPI = {
   getProgress: () => apiClient.get('/performance/progress'),
   getLeaderboard: (standard) => apiClient.get(`/performance/leaderboard/${standard}`),
   getTeacherStats: () => apiClient.get('/performance/teacher-stats'),
+  getTeacherOverview: () => apiClient.get('/performance/teacher-overview'),
+  getAllStudents: (params) => apiClient.get('/performance/all', { params }),
 };
 
 // ============= COMMUNITY API =============

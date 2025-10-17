@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import { 
   LayoutDashboard, 
   BookOpen, 
-  MessageCircle, 
   Bot, 
   TrendingUp, 
   Trophy,
@@ -25,11 +24,11 @@ const Sidebar = () => {
     { icon: BookOpen, label: 'Learning', path: '/student/learning' },
     { icon: Video, label: 'Videos', path: '/student/videos' },
     { icon: FileText, label: 'Tests', path: '/student/tests' },
-    { icon: MessageCircle, label: 'Chat', path: '/student/chat' },
-    { icon: Bot, label: 'Chatbot', path: '/student/chatbot' },
+  // Chat removed
+  { icon: Bot, label: 'Chatbot', path: '/student/chatbot' },
     { icon: TrendingUp, label: 'Performance', path: '/student/performance' },
     { icon: Trophy, label: 'Leaderboard', path: '/student/leaderboard' },
-    { icon: Users, label: 'Community', path: '/student/community' },
+  // Community removed
     { icon: UserCircle, label: 'Profile', path: '/student/profile' },
     { icon: Settings, label: 'Settings', path: '/student/settings' },
   ];
@@ -37,9 +36,9 @@ const Sidebar = () => {
   const teacherMenuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/teacher/dashboard' },
     { icon: Users, label: 'Students', path: '/teacher/students' },
-    { icon: MessageCircle, label: 'Chat', path: '/teacher/chat' },
+  // Teacher Chat removed
     { icon: TrendingUp, label: 'Performance', path: '/teacher/performance' },
-    { icon: Users, label: 'Community', path: '/teacher/community' },
+  // Teacher Community removed
     { icon: UserCircle, label: 'Profile', path: '/teacher/profile' },
     { icon: Settings, label: 'Settings', path: '/teacher/settings' },
   ];

@@ -11,6 +11,7 @@ const Students = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStd, setSelectedStd] = useState('all');
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(null);
 
   useEffect(() => {
     fetchStudents();
@@ -23,17 +24,27 @@ const Students = () => {
   const fetchStudents = async () => {
     try {
       const response = await performanceAPI.getAllStudents();
-      setStudents(response.data.students || []);
+      const serverStudents = (response.data.students || []).map((student) => {
+        const average = student.average_percentage ? Number(student.average_percentage) : 0;
+        const safeName = student.username || 'Unknown Student';
+        return {
+          id: student.id,
+          name: safeName,
+          std: student.std,
+          avgScore: Number(average.toFixed(2)),
+          testsCompleted: student.total_tests ? Number(student.total_tests) : 0,
+          contact: student.mobile || '',
+          trend: average >= 75 ? 'up' : 'down',
+          lastTestDate: student.last_test_date
+        };
+      });
+
+      setStudents(serverStudents);
+      setFetchError(null);
     } catch (error) {
       console.error('Error fetching students:', error);
-      // Set sample data if API fails
-      setStudents([
-        { id: 1, name: 'Rahul Sharma', std: 8, avg_score: 85, tests_completed: 12, trend: 'up' },
-        { id: 2, name: 'Priya Patel', std: 7, avg_score: 92, tests_completed: 15, trend: 'up' },
-        { id: 3, name: 'Arjun Kumar', std: 8, avg_score: 78, tests_completed: 10, trend: 'down' },
-        { id: 4, name: 'Sneha Reddy', std: 6, avg_score: 88, tests_completed: 14, trend: 'up' },
-        { id: 5, name: 'Amit Singh', std: 7, avg_score: 75, tests_completed: 11, trend: 'up' }
-      ]);
+      setStudents([]);
+      setFetchError('Unable to load students. Please try again later.');
     } finally {
       setLoading(false);
     }
@@ -107,7 +118,11 @@ const Students = () => {
           <div className="text-center">
             <p className="text-gray-600 mb-2">Class Average</p>
             <p className="text-4xl font-bold text-green-600">
-              {Math.round(students.reduce((sum, s) => sum + (s.avg_score || 0), 0) / students.length || 0)}%
+              {students.length > 0
+                ? Math.round(
+                    students.reduce((sum, s) => sum + (s.avgScore || 0), 0) / students.length
+                  )
+                : 0}%
             </p>
           </div>
         </Card>
@@ -115,7 +130,7 @@ const Students = () => {
           <div className="text-center">
             <p className="text-gray-600 mb-2">Active Students</p>
             <p className="text-4xl font-bold text-blue-600">
-              {students.filter(s => s.tests_completed > 0).length}
+              {students.filter(s => s.testsCompleted > 0).length}
             </p>
           </div>
         </Card>
@@ -123,6 +138,11 @@ const Students = () => {
 
       {/* Students List */}
       <Card>
+        {fetchError && (
+          <p className="p-4 text-sm text-red-600 bg-red-50 border border-red-100 rounded-md mb-4">
+            {fetchError}
+          </p>
+        )}
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
@@ -147,11 +167,11 @@ const Students = () => {
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-primary-100 text-primary-700 rounded-full flex items-center justify-center font-bold">
-                          {student.name[0]}
+                          {student.name?.[0] || '?'}
                         </div>
                         <div>
                           <p className="font-medium text-gray-900">{student.name}</p>
-                          <p className="text-sm text-gray-600">{student.email || 'No email'}</p>
+                          <p className="text-sm text-gray-600">{student.contact || 'No contact info'}</p>
                         </div>
                       </div>
                     </td>
@@ -162,14 +182,14 @@ const Students = () => {
                     </td>
                     <td className="py-3 px-4">
                       <span className={`font-bold ${
-                        student.avg_score >= 80 ? 'text-green-600' : 
-                        student.avg_score >= 60 ? 'text-yellow-600' : 
+                        student.avgScore >= 80 ? 'text-green-600' : 
+                        student.avgScore >= 60 ? 'text-yellow-600' : 
                         'text-red-600'
                       }`}>
-                        {student.avg_score || 0}%
+                        {student.avgScore || 0}%
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-gray-900">{student.tests_completed || 0}</td>
+                    <td className="py-3 px-4 text-gray-900">{student.testsCompleted || 0}</td>
                     <td className="py-3 px-4">
                       {student.trend === 'up' ? (
                         <div className="flex items-center gap-1 text-green-600">

@@ -10,6 +10,7 @@ router.get('/progress', authenticate, performanceController.getProgress);
 
 // Teacher stats
 router.get('/teacher-stats', authenticate, isTeacher, performanceController.getTeacherStats);
+router.get('/teacher-overview', authenticate, isTeacher, performanceController.getTeacherOverview);
 
 // Get leaderboard by standard
 router.get('/leaderboard/:standard', authenticate, performanceController.getLeaderboard);

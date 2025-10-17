@@ -272,3 +272,167 @@ exports.getTeacherStats = async (req, res) => {
     });
   }
 };
+
+exports.getTeacherOverview = async (req, res) => {
+  try {
+    const [weeklyRows] = await pool.query(
+      `SELECT DATE(r.submitted_at) as day, 
+              AVG(r.percentage) as avg_percentage,
+              COUNT(*) as tests_count
+       FROM results r
+       WHERE r.submitted_at >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+       GROUP BY DATE(r.submitted_at)
+       ORDER BY day`
+    );
+
+    const weeklyMap = new Map();
+    weeklyRows.forEach((row) => {
+      const dayKey = row.day instanceof Date
+        ? row.day.toISOString().slice(0, 10)
+        : String(row.day);
+      weeklyMap.set(dayKey, {
+        avg: row.avg_percentage ? Number(row.avg_percentage) : 0,
+        tests: row.tests_count ? Number(row.tests_count) : 0
+      });
+    });
+
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const weeklyPerformance = [];
+
+    for (let offset = 6; offset >= 0; offset--) {
+      const current = new Date(today);
+      current.setDate(today.getDate() - offset);
+      const dayKey = new Date(current.getTime() - current.getTimezoneOffset() * 60000)
+        .toISOString()
+        .slice(0, 10);
+      const entry = weeklyMap.get(dayKey);
+      const average = entry ? Number(entry.avg.toFixed(2)) : 0;
+      const tests = entry ? entry.tests : 0;
+      weeklyPerformance.push({
+        day: dayNames[current.getDay()],
+        date: dayKey,
+        average,
+        tests
+      });
+    }
+
+    const [subjectRows] = await pool.query(
+      `SELECT s.name as subject_name, AVG(r.percentage) as avg_percentage
+       FROM results r
+       JOIN tests t ON r.test_id = t.id
+       JOIN chapters c ON t.chapter_id = c.id
+       JOIN subjects s ON c.subject_id = s.id
+       GROUP BY s.id, s.name
+       ORDER BY avg_percentage DESC`
+    );
+
+    const subjectPerformance = subjectRows.map((row) => ({
+      subject: row.subject_name,
+      average: row.avg_percentage ? Number(Number(row.avg_percentage).toFixed(2)) : 0
+    }));
+
+    const [activityRows] = await pool.query(
+      `SELECT r.id, u.name as student_name, s.name as subject_name, t.title as test_title,
+              r.percentage, r.submitted_at
+       FROM results r
+       JOIN users u ON r.user_id = u.id
+       JOIN tests t ON r.test_id = t.id
+       JOIN chapters c ON t.chapter_id = c.id
+       JOIN subjects s ON c.subject_id = s.id
+       ORDER BY r.submitted_at DESC
+       LIMIT 10`
+    );
+
+    const recentActivities = activityRows.map((row) => ({
+      id: row.id,
+      studentName: row.student_name,
+      subject: row.subject_name,
+      testTitle: row.test_title,
+      percentage: row.percentage ? Number(Number(row.percentage).toFixed(2)) : 0,
+      submittedAt: row.submitted_at
+    }));
+
+    const [monthlyRows] = await pool.query(
+      `SELECT DATE_FORMAT(r.submitted_at, '%Y-%m-01') as month_start,
+              DATE_FORMAT(r.submitted_at, '%b %Y') as month_label,
+              AVG(r.percentage) as avg_percentage,
+              COUNT(*) as tests_count
+       FROM results r
+       WHERE r.submitted_at >= DATE_SUB(DATE_FORMAT(NOW(), '%Y-%m-01'), INTERVAL 5 MONTH)
+       GROUP BY month_start, month_label
+       ORDER BY month_start`
+    );
+
+    const monthlyPerformance = monthlyRows.map((row) => ({
+      month: row.month_label,
+      average: row.avg_percentage ? Number(Number(row.avg_percentage).toFixed(2)) : 0,
+      tests: row.tests_count ? Number(row.tests_count) : 0
+    }));
+
+    const [gradeRows] = await pool.query(
+      `SELECT s.name as subject_name, r.percentage
+       FROM results r
+       JOIN tests t ON r.test_id = t.id
+       JOIN chapters c ON t.chapter_id = c.id
+       JOIN subjects s ON c.subject_id = s.id`
+    );
+
+    const gradeDistributionMap = new Map();
+    gradeRows.forEach((row) => {
+      const subject = row.subject_name || 'Unknown';
+      if (!gradeDistributionMap.has(subject)) {
+        gradeDistributionMap.set(subject, { subject, gradeA: 0, gradeB: 0, gradeC: 0, gradeD: 0 });
+      }
+
+      const record = gradeDistributionMap.get(subject);
+      const percentage = row.percentage ? Number(row.percentage) : 0;
+
+      if (percentage >= 90) record.gradeA += 1;
+      else if (percentage >= 75) record.gradeB += 1;
+      else if (percentage >= 60) record.gradeC += 1;
+      else record.gradeD += 1;
+    });
+
+    const gradeDistribution = Array.from(gradeDistributionMap.values());
+
+    const [topRows] = await pool.query(
+      `SELECT u.id, u.name as student_name, u.std,
+              AVG(r.percentage) as avg_percentage,
+              COUNT(r.id) as tests_completed
+       FROM users u
+       JOIN results r ON u.id = r.user_id
+       WHERE u.role = 'student' AND r.submitted_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+       GROUP BY u.id, u.name, u.std
+       HAVING tests_completed > 0
+       ORDER BY avg_percentage DESC
+       LIMIT 10`
+    );
+
+    const topPerformers = topRows.map((row) => ({
+      studentId: row.id,
+      name: row.student_name,
+      std: row.std,
+      average: row.avg_percentage ? Number(Number(row.avg_percentage).toFixed(2)) : 0,
+      testsCompleted: row.tests_completed ? Number(row.tests_completed) : 0
+    }));
+
+    res.json({
+      success: true,
+      weeklyPerformance,
+      subjectPerformance,
+      recentActivities,
+      monthlyPerformance,
+      gradeDistribution,
+      topPerformers
+    });
+  } catch (error) {
+    console.error('Get teacher overview error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch teacher overview',
+      error: error.message
+    });
+  }
+};

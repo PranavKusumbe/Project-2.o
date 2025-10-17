@@ -140,12 +140,12 @@ INSERT INTO educational_content (standard, subject, topic, description, content_
 -- English Standard 1
 (1, 'English', 'English Alphabet A to Z', 'Learn English alphabets with pronunciation and examples', 'video', 'https://www.youtube.com/watch?v=BELlZKpi1Zs', 'https://img.youtube.com/vi/BELlZKpi1Zs/mqdefault.jpg', NULL, 'YouTube - Kids Learning Tube', 10),
 (1, 'English', 'Phonics Sounds', 'Learn phonics sounds for better reading', 'video', 'https://www.youtube.com/watch?v=saF3-f0XWAY', 'https://img.youtube.com/vi/saF3-f0XWAY/mqdefault.jpg', NULL, 'YouTube - ChuChu TV', 15),
-(1, 'English', 'Simple Words - Animals', 'Learn simple English words about animals', 'combined', 'https://www.youtube.com/watch?v=QQPLTQ8bCqI', 'https://img.youtube.com/vi/QQPLTQ8bCqI/mqdefault.jpg', NULL, 'YouTube - Educational', 10),
+(1, 'English', 'Simple Words - Animals', 'Learn simple English words about animals', 'combined', 'https://www.youtube.com/watch?v=M4Abw_0K2Ok', 'https://img.youtube.com/vi/M4Abw_0K2Ok/mqdefault.jpg', NULL, 'YouTube - Dave and Ava', 8),
 
--- Mathematics Standard 1 (Verified working links)
-(1, 'Mathematics', 'Numbers 1 to 10', 'Learn counting from 1 to 10 with fun animations', 'video', 'https://www.youtube.com/watch?v=D0Ajq682yrA', 'https://img.youtube.com/vi/D0Ajq682yrA/mqdefault.jpg', NULL, 'YouTube - CoComelon', 3),
-(1, 'Mathematics', 'Numbers 11 to 20', 'Learn counting from 11 to 20', 'video', 'https://www.youtube.com/watch?v=85359qGbo-A', 'https://img.youtube.com/vi/85359qGbo-A/mqdefault.jpg', NULL, 'YouTube - Kids Learning', 5),
-(1, 'Mathematics', 'Number Recognition', 'Identify and recognize numbers', 'video', 'https://www.youtube.com/watch?v=1dkPouLWIQc', 'https://img.youtube.com/vi/1dkPouLWIQc/mqdefault.jpg', NULL, 'YouTube - Educational', 4),
+-- Mathematics Standard 1
+(1, 'Mathematics', 'Numbers 1 to 10', 'Learn counting from 1 to 10 with fun animations', 'video', 'https://www.youtube.com/watch?v=DR-cfDsHCGA', 'https://img.youtube.com/vi/DR-cfDsHCGA/mqdefault.jpg', NULL, 'YouTube - HooplaKidz', 12),
+(1, 'Mathematics', 'Numbers 11 to 20', 'Learn counting from 11 to 20', 'video', 'https://www.youtube.com/watch?v=0TgLtF3PMOc', 'https://img.youtube.com/vi/0TgLtF3PMOc/mqdefault.jpg', NULL, 'YouTube - HooplaKidz', 10),
+(1, 'Mathematics', 'Number Recognition', 'Identify and recognize numbers', 'video', 'https://www.youtube.com/watch?v=Yt8GFgxlITs', 'https://img.youtube.com/vi/Yt8GFgxlITs/mqdefault.jpg', NULL, 'YouTube - Numberblocks', 15),
 
 -- Marathi Standard 1
 (1, 'Marathi', 'मराठी वर्णमाला (Marathi Alphabet)', 'Learn Marathi alphabets क to ज्ञ', 'video', 'https://www.youtube.com/watch?v=Kn7o8pB8gqE', 'https://img.youtube.com/vi/Kn7o8pB8gqE/mqdefault.jpg', NULL, 'YouTube - Marathi Learning', 20),

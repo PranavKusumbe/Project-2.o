@@ -3,11 +3,9 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   Users, 
-  MessageSquare, 
   TrendingUp, 
   FileText,
   Clock,
-  Award,
   Activity
 } from 'lucide-react';
 import Card from '../../components/Card';
@@ -28,6 +26,11 @@ import {
 
 const Dashboard = () => {
   const [stats, setStats] = useState(null);
+  const [overview, setOverview] = useState({
+    weeklyPerformance: [],
+    subjectPerformance: [],
+    recentActivities: []
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -36,8 +39,17 @@ const Dashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const response = await performanceAPI.getTeacherStats();
-      setStats(response.data.stats || {});
+      const [statsResponse, overviewResponse] = await Promise.all([
+        performanceAPI.getTeacherStats(),
+        performanceAPI.getTeacherOverview()
+      ]);
+
+      setStats(statsResponse.data.stats || {});
+      setOverview({
+        weeklyPerformance: overviewResponse.data.weeklyPerformance || [],
+        subjectPerformance: overviewResponse.data.subjectPerformance || [],
+        recentActivities: overviewResponse.data.recentActivities || []
+      });
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
       setStats({
@@ -46,10 +58,21 @@ const Dashboard = () => {
         avg_class_score: 0,
         total_tests: 0
       });
+      setOverview({ weeklyPerformance: [], subjectPerformance: [], recentActivities: [] });
     } finally {
       setLoading(false);
     }
   };
+
+  const testsThisWeek = overview.weeklyPerformance.reduce((sum, entry) => sum + entry.tests, 0);
+  const averageThisWeek = overview.weeklyPerformance.length
+    ? Number(
+        (
+          overview.weeklyPerformance.reduce((sum, entry) => sum + entry.average, 0) /
+          overview.weeklyPerformance.length
+        ).toFixed(1)
+      )
+    : 0;
 
   const statCards = [
     {
@@ -58,7 +81,7 @@ const Dashboard = () => {
       icon: Users,
       color: 'from-blue-500 to-blue-600',
       link: '/teacher/students',
-      change: '+5 this month'
+      change: `${testsThisWeek} tests completed this week`
     },
     {
       title: 'Active Today',
@@ -66,7 +89,9 @@ const Dashboard = () => {
       icon: Activity,
       color: 'from-green-500 to-green-600',
       link: '/teacher/students',
-      change: '84% active rate'
+      change: stats?.total_students
+        ? `${Math.round((stats.active_students / Math.max(stats.total_students, 1)) * 100)}% of class`
+        : 'No recent activity'
     },
     {
       title: 'Avg. Class Score',
@@ -74,7 +99,7 @@ const Dashboard = () => {
       icon: TrendingUp,
       color: 'from-purple-500 to-purple-600',
       link: '/teacher/performance',
-      change: '+3% from last week'
+      change: averageThisWeek ? `Weekly avg: ${averageThisWeek}%` : 'No tests this week'
     },
     {
       title: 'Tests Created',
@@ -82,7 +107,7 @@ const Dashboard = () => {
       icon: FileText,
       color: 'from-pink-500 to-pink-600',
       link: '/teacher/tests',
-      change: '2 pending review'
+      change: 'Available across all standards'
     }
   ];
 
@@ -95,42 +120,12 @@ const Dashboard = () => {
       color: 'bg-blue-500'
     },
     {
-      title: 'Chat Messages',
-      description: 'Respond to queries',
-      icon: MessageSquare,
-      link: '/teacher/chat',
-      color: 'bg-green-500'
-    },
-    {
       title: 'Performance',
       description: 'View detailed analytics',
       icon: TrendingUp,
       link: '/teacher/performance',
       color: 'bg-purple-500'
-    },
-    {
-      title: 'Community',
-      description: 'Manage posts',
-      icon: Award,
-      link: '/teacher/community',
-      color: 'bg-pink-500'
     }
-  ];
-
-  // Sample data for charts
-  const weeklyPerformance = [
-    { day: 'Mon', average: 75, tests: 12 },
-    { day: 'Tue', average: 78, tests: 15 },
-    { day: 'Wed', average: 82, tests: 18 },
-    { day: 'Thu', average: 79, tests: 14 },
-    { day: 'Fri', average: 85, tests: 20 }
-  ];
-
-  const subjectPerformance = [
-    { subject: 'Math', score: 76 },
-    { subject: 'English', score: 82 },
-    { subject: 'Science', score: 79 },
-    { subject: 'Social', score: 73 }
   ];
 
   if (loading) {
@@ -177,7 +172,7 @@ const Dashboard = () => {
         <Card>
           <h3 className="text-lg font-bold text-gray-900 mb-4">Weekly Class Performance</h3>
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={weeklyPerformance}>
+            <LineChart data={overview.weeklyPerformance}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="day" />
               <YAxis />
@@ -205,12 +200,12 @@ const Dashboard = () => {
         <Card>
           <h3 className="text-lg font-bold text-gray-900 mb-4">Subject-wise Performance</h3>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={subjectPerformance}>
+            <BarChart data={overview.subjectPerformance}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="subject" />
               <YAxis />
               <Tooltip />
-              <Bar dataKey="score" fill="#8b5cf6" />
+              <Bar dataKey="average" fill="#8b5cf6" name="Average %" />
             </BarChart>
           </ResponsiveContainer>
         </Card>
@@ -245,39 +240,40 @@ const Dashboard = () => {
       <Card>
         <h3 className="text-lg font-bold text-gray-900 mb-4">Recent Student Activity</h3>
         <div className="space-y-3">
-          {[
-            { student: 'Rahul Sharma', action: 'Completed Math Test', score: '95%', time: '10 mins ago' },
-            { student: 'Priya Patel', action: 'Submitted Question', score: null, time: '25 mins ago' },
-            { student: 'Arjun Kumar', action: 'Watched Science Video', score: null, time: '1 hour ago' },
-            { student: 'Sneha Reddy', action: 'Completed English Test', score: '88%', time: '2 hours ago' }
-          ].map((activity, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-primary-100 text-primary-700 rounded-full flex items-center justify-center font-bold">
-                  {activity.student[0]}
+          {overview.recentActivities.length > 0 ? (
+            overview.recentActivities.map((activity, index) => (
+              <motion.div
+                key={activity.id || index}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-primary-100 text-primary-700 rounded-full flex items-center justify-center font-bold">
+                            {activity.studentName ? activity.studentName[0] : '?'}
+                  </div>
+                  <div>
+                            <p className="font-medium text-gray-900">{activity.studentName || 'Unknown Student'}</p>
+                    <p className="text-sm text-gray-600">
+                              {(activity.testTitle || 'Test')} &middot; {(activity.subject || 'Subject')}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-medium text-gray-900">{activity.student}</p>
-                  <p className="text-sm text-gray-600">{activity.action}</p>
+                <div className="text-right">
+                  {activity.percentage !== null && activity.percentage !== undefined ? (
+                    <p className="font-bold text-green-600 mb-1">{activity.percentage}%</p>
+                  ) : null}
+                  <p className="text-xs text-gray-500 flex items-center gap-1">
+                    <Clock size={12} />
+                    {activity.submittedAt ? new Date(activity.submittedAt).toLocaleString() : 'No timestamp'}
+                  </p>
                 </div>
-              </div>
-              <div className="text-right">
-                {activity.score && (
-                  <p className="font-bold text-green-600 mb-1">{activity.score}</p>
-                )}
-                <p className="text-xs text-gray-500 flex items-center gap-1">
-                  <Clock size={12} />
-                  {activity.time}
-                </p>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            ))
+          ) : (
+            <p className="text-sm text-gray-500 text-center py-4">No recent activity recorded.</p>
+          )}
         </div>
       </Card>
     </div>

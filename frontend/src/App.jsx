@@ -14,12 +14,12 @@ import StudentDashboard from './pages/student/Dashboard';
 import Learning from './pages/student/Learning';
 import ChapterDetails from './pages/student/ChapterDetails';
 import Leaderboard from './pages/student/Leaderboard';
-import Community from './pages/student/Community';
+// Removed: Community UI
 import Videos from './pages/student/Videos';
 import Tests from './pages/student/Tests';
 import TestTaking from './pages/student/TestTaking';
 import TestResult from './pages/student/TestResult';
-import Chat from './pages/student/Chat';
+// Removed: Chat UI
 import Chatbot from './pages/student/Chatbot';
 import Performance from './pages/student/Performance';
 import StudentSettings from './pages/student/Settings';
@@ -29,8 +29,7 @@ import StudentProfile from './pages/student/Profile';
 import TeacherDashboard from './pages/teacher/Dashboard';
 import TeacherStudents from './pages/teacher/Students';
 import TeacherPerformance from './pages/teacher/Performance';
-import TeacherChat from './pages/teacher/Chat';
-import TeacherCommunity from './pages/teacher/Community';
+// Removed: Teacher Chat & Community UI
 import TeacherSettings from './pages/teacher/Settings';
 import TeacherProfile from './pages/teacher/Profile';
 
@@ -98,11 +97,11 @@ function App() {
           <Route path="tests" element={<Tests />} />
           <Route path="test/:testId" element={<TestTaking />} />
           <Route path="test-result/:testId" element={<TestResult />} />
-          <Route path="chat" element={<Chat />} />
+          {/* Chat removed */}
           <Route path="chatbot" element={<Chatbot />} />
           <Route path="performance" element={<Performance />} />
           <Route path="leaderboard" element={<Leaderboard />} />
-          <Route path="community" element={<Community />} />
+          {/* Community removed */}
           <Route path="settings" element={<StudentSettings />} />
           <Route path="profile" element={<StudentProfile />} />
         </Route>
@@ -118,9 +117,9 @@ function App() {
         >
           <Route path="dashboard" element={<TeacherDashboard />} />
           <Route path="students" element={<TeacherStudents />} />
-          <Route path="chat" element={<TeacherChat />} />
+          {/* Teacher Chat removed */}
           <Route path="performance" element={<TeacherPerformance />} />
-          <Route path="community" element={<TeacherCommunity />} />
+          {/* Teacher Community removed */}
           <Route path="settings" element={<TeacherSettings />} />
           <Route path="profile" element={<TeacherProfile />} />
         </Route>
